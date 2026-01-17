@@ -30,9 +30,11 @@ const generateStyles = () => `
     padding: 10mm;
     background: white;
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    grid-template-rows: repeat(4, 1fr);
+    grid-template-columns: repeat(2, 91mm);
+    grid-template-rows: repeat(4, 55mm);
     gap: 0;
+    justify-content: center;
+    align-content: center;
     page-break-after: always;
   }
 
@@ -41,14 +43,24 @@ const generateStyles = () => `
   }
 
   .card {
-    width: 95mm;
-    height: 69mm;
-    border: 1px dashed #ccc;
+    width: 91mm;
+    height: 55mm;
+    border: none;
+    border-left: 1px dashed #ccc;
+    border-top: 1px dashed #ccc;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 10mm;
+    padding: 5mm;
+  }
+
+  .card:nth-child(2n) {
+    border-right: 1px dashed #ccc;
+  }
+
+  .card:nth-child(n+7) {
+    border-bottom: 1px dashed #ccc;
   }
 
   .card-icon {
@@ -61,7 +73,7 @@ const generateStyles = () => `
   }
 
   .card-name {
-    font-size: 18pt;
+    font-size: 14pt;
     font-weight: bold;
     text-align: center;
     word-break: break-word;
