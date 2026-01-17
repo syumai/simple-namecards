@@ -85,11 +85,6 @@ function App() {
     }
   };
 
-  const currentPageCards = cards.slice(
-    (currentPage - 1) * CARDS_PER_PAGE,
-    currentPage * CARDS_PER_PAGE
-  );
-
   return (
     <div className="container">
       <div className="input-panel">
@@ -132,7 +127,6 @@ function App() {
         </div>
         <Preview
           ref={iframeRef}
-          cards={currentPageCards}
           allCards={cards}
           currentPage={currentPage}
           totalPages={totalPages}

@@ -2,7 +2,6 @@ import { forwardRef, useEffect, useRef, useImperativeHandle } from 'react';
 import { NameCard, CARDS_PER_PAGE } from '../types';
 
 interface PreviewProps {
-  cards: NameCard[];
   allCards: NameCard[];
   currentPage: number;
   totalPages: number;
@@ -142,9 +141,9 @@ const generateEmptyCardHtml = () => `
   </div>
 `;
 
-const generatePageHtml = (cards: NameCard[], startIndex: number) => {
+const generatePageHtml = (cards: NameCard[], startIndex: number, pageNumber: number) => {
   const pageCards = cards.slice(startIndex, startIndex + CARDS_PER_PAGE);
-  let html = '<div class="page">';
+  let html = `<div class="page" data-page="${pageNumber}">`;
 
   for (let i = 0; i < CARDS_PER_PAGE; i++) {
     if (i < pageCards.length) {
@@ -158,15 +157,25 @@ const generatePageHtml = (cards: NameCard[], startIndex: number) => {
   return html;
 };
 
-const generatePreviewHtml = (cards: NameCard[]) => {
+const generatePreviewHtml = (allCards: NameCard[], currentPage: number) => {
   const styles = generateStyles();
   let pagesHtml = '';
 
-  if (cards.length === 0) {
-    pagesHtml = '<div class="page">' + Array(8).fill(generateEmptyCardHtml()).join('') + '</div>';
+  if (allCards.length === 0) {
+    pagesHtml = '<div class="page" data-page="1">' + Array(8).fill(generateEmptyCardHtml()).join('') + '</div>';
   } else {
-    pagesHtml = generatePageHtml(cards, 0);
+    const totalPages = Math.ceil(allCards.length / CARDS_PER_PAGE);
+    for (let i = 0; i < totalPages; i++) {
+      pagesHtml += generatePageHtml(allCards, i * CARDS_PER_PAGE, i + 1);
+    }
   }
+
+  const pageVisibilityStyle = `
+    @media screen {
+      .page { display: none; }
+      .page[data-page="${currentPage}"] { display: grid; }
+    }
+  `;
 
   return `
     <!DOCTYPE html>
@@ -174,6 +183,7 @@ const generatePreviewHtml = (cards: NameCard[]) => {
     <head>
       <meta charset="UTF-8">
       <style>${styles}</style>
+      <style>${pageVisibilityStyle}</style>
     </head>
     <body class="screen-only">
       ${pagesHtml}
@@ -187,11 +197,11 @@ const generatePrintHtml = (allCards: NameCard[]) => {
   let pagesHtml = '';
 
   if (allCards.length === 0) {
-    pagesHtml = '<div class="page">' + Array(8).fill(generateEmptyCardHtml()).join('') + '</div>';
+    pagesHtml = '<div class="page" data-page="1">' + Array(8).fill(generateEmptyCardHtml()).join('') + '</div>';
   } else {
     const totalPages = Math.ceil(allCards.length / CARDS_PER_PAGE);
     for (let i = 0; i < totalPages; i++) {
-      pagesHtml += generatePageHtml(allCards, i * CARDS_PER_PAGE);
+      pagesHtml += generatePageHtml(allCards, i * CARDS_PER_PAGE, i + 1);
     }
   }
 
@@ -210,7 +220,7 @@ const generatePrintHtml = (allCards: NameCard[]) => {
 };
 
 const Preview = forwardRef<HTMLIFrameElement, PreviewProps>(
-  ({ cards, allCards }, ref) => {
+  ({ allCards, currentPage }, ref) => {
     const iframeRef = useRef<HTMLIFrameElement>(null);
 
     useImperativeHandle(ref, () => {
@@ -230,12 +240,12 @@ const Preview = forwardRef<HTMLIFrameElement, PreviewProps>(
     useEffect(() => {
       const iframe = iframeRef.current;
       if (iframe) {
-        const html = generatePreviewHtml(cards);
+        const html = generatePreviewHtml(allCards, currentPage);
         iframe.contentDocument?.open();
         iframe.contentDocument?.write(html);
         iframe.contentDocument?.close();
       }
-    }, [cards]);
+    }, [allCards, currentPage]);
 
     return (
       <iframe
