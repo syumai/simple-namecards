@@ -3,15 +3,15 @@ import { NameCard, CARDS_PER_PAGE } from './types';
 import Preview from './components/Preview';
 
 const defaultCards: NameCard[] = [
-  { name: "Felix", icon: "https://api.dicebear.com/7.x/thumbs/svg?seed=Felix" },
-  { name: "Aneka", icon: "https://api.dicebear.com/7.x/thumbs/svg?seed=Aneka" },
-  { name: "Bob", icon: "https://api.dicebear.com/7.x/thumbs/svg?seed=Bob" },
-  { name: "Jack", icon: "https://api.dicebear.com/7.x/thumbs/svg?seed=Jack" },
-  { name: "Molly", icon: "https://api.dicebear.com/7.x/thumbs/svg?seed=Molly" },
-  { name: "Simba", icon: "https://api.dicebear.com/7.x/thumbs/svg?seed=Simba" },
-  { name: "Bear", icon: "https://api.dicebear.com/7.x/thumbs/svg?seed=Bear" },
-  { name: "Kitty", icon: "https://api.dicebear.com/7.x/thumbs/svg?seed=Kitty" },
-  { name: "Jasmine", icon: "https://api.dicebear.com/7.x/thumbs/svg?seed=Jasmine" },
+  { name: "Felix", icon: "https://api.dicebear.com/7.x/thumbs/svg?seed=Felix", social: "@felix" },
+  { name: "Aneka", icon: "https://api.dicebear.com/7.x/thumbs/svg?seed=Aneka", social: "@aneka" },
+  { name: "Bob", icon: "https://api.dicebear.com/7.x/thumbs/svg?seed=Bob", social: "@bob" },
+  { name: "Jack", icon: "https://api.dicebear.com/7.x/thumbs/svg?seed=Jack", social: "@jack" },
+  { name: "Molly", icon: "https://api.dicebear.com/7.x/thumbs/svg?seed=Molly", social: "@molly" },
+  { name: "Simba", icon: "https://api.dicebear.com/7.x/thumbs/svg?seed=Simba", social: "@simba" },
+  { name: "Bear", icon: "https://api.dicebear.com/7.x/thumbs/svg?seed=Bear", social: "@bear" },
+  { name: "Kitty", icon: "https://api.dicebear.com/7.x/thumbs/svg?seed=Kitty", social: "@kitty" },
+  { name: "Jasmine", icon: "https://api.dicebear.com/7.x/thumbs/svg?seed=Jasmine", social: "@jasmine" },
 ];
 
 const defaultJson = JSON.stringify(defaultCards, null, 2);
@@ -46,10 +46,14 @@ function App() {
         if (typeof item.icon !== 'string') {
           throw new Error(`Element ${index + 1} is missing "icon"`);
         }
-        return {
+        const card: NameCard = {
           name: item.name,
           icon: item.icon,
         };
+        if (typeof item.social === 'string' && item.social.trim()) {
+          card.social = item.social;
+        }
+        return card;
       });
 
       setCards(validCards);

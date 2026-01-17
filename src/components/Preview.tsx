@@ -56,13 +56,21 @@ const generateStyles = () => `
     height: 30mm;
     object-fit: cover;
     border-radius: 50%;
-    margin-bottom: 8mm;
+    margin-bottom: 5mm;
     background-color: #f0f0f0;
   }
 
   .card-name {
     font-size: 18pt;
     font-weight: bold;
+    text-align: center;
+    word-break: break-word;
+  }
+
+  .card-social {
+    font-size: 11pt;
+    color: #888;
+    margin-top: 1mm;
     text-align: center;
     word-break: break-word;
   }
@@ -112,6 +120,7 @@ const generateCardHtml = (card: NameCard) => `
   <div class="card">
     <img class="card-icon" src="${card.icon}" alt="${card.name}" onerror="this.style.display='none'" />
     <div class="card-name">${card.name}</div>
+    ${card.social ? `<div class="card-social">${card.social}</div>` : ''}
   </div>
 `;
 
