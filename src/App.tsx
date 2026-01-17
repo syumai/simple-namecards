@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { NameCard, CARDS_PER_PAGE } from './types';
 import Preview from './components/Preview';
 
@@ -85,6 +85,27 @@ function App() {
     }
   };
 
+  const handleShare = async () => {
+    const encoded = encodeURIComponent(jsonInput);
+    const url = `${window.location.origin}${window.location.pathname}?data=${encoded}`;
+    await navigator.clipboard.writeText(url);
+    alert('URL copied to clipboard!');
+  };
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const data = params.get('data');
+    if (data) {
+      try {
+        const json = decodeURIComponent(data);
+        setJsonInput(json);
+        parseJson(json);
+      } catch (e) {
+        // ignore invalid data
+      }
+    }
+  }, [parseJson]);
+
   return (
     <div className="container">
       <div className="input-panel">
@@ -97,13 +118,23 @@ function App() {
           placeholder="Enter JSON array..."
         />
         {error && <div className="error-message">{error}</div>}
-        <button
-          type="button"
-          onClick={handlePrint}
-          disabled={cards.length === 0}
-        >
-          Print
-        </button>
+        <div className="button-group">
+          <button
+            type="button"
+            onClick={handlePrint}
+            disabled={cards.length === 0}
+          >
+            Print
+          </button>
+          <button
+            type="button"
+            className="btn-secondary"
+            onClick={handleShare}
+            disabled={cards.length === 0}
+          >
+            Share
+          </button>
+        </div>
       </div>
       <div className="preview-panel">
         <div className="pagination">
