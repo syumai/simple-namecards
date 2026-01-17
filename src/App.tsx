@@ -1,0 +1,141 @@
+import { useState, useCallback, useRef } from 'react';
+import { NameCard, CARDS_PER_PAGE } from './types';
+import Preview from './components/Preview';
+
+const defaultCards: NameCard[] = [
+  { name: "Felix", icon: "https://api.dicebear.com/7.x/thumbs/svg?seed=Felix" },
+  { name: "Aneka", icon: "https://api.dicebear.com/7.x/thumbs/svg?seed=Aneka" },
+  { name: "Bob", icon: "https://api.dicebear.com/7.x/thumbs/svg?seed=Bob" },
+  { name: "Jack", icon: "https://api.dicebear.com/7.x/thumbs/svg?seed=Jack" },
+  { name: "Molly", icon: "https://api.dicebear.com/7.x/thumbs/svg?seed=Molly" },
+  { name: "Simba", icon: "https://api.dicebear.com/7.x/thumbs/svg?seed=Simba" },
+  { name: "Bear", icon: "https://api.dicebear.com/7.x/thumbs/svg?seed=Bear" },
+  { name: "Kitty", icon: "https://api.dicebear.com/7.x/thumbs/svg?seed=Kitty" },
+  { name: "Jasmine", icon: "https://api.dicebear.com/7.x/thumbs/svg?seed=Jasmine" },
+];
+
+const defaultJson = JSON.stringify(defaultCards, null, 2);
+
+function App() {
+  const [jsonInput, setJsonInput] = useState(defaultJson);
+  const [cards, setCards] = useState<NameCard[]>(defaultCards);
+  const [error, setError] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+
+  const totalPages = Math.max(1, Math.ceil(cards.length / CARDS_PER_PAGE));
+
+  const parseJson = useCallback((input: string) => {
+    if (!input.trim()) {
+      setCards([]);
+      setError('');
+      setCurrentPage(1);
+      return;
+    }
+
+    try {
+      const parsed = JSON.parse(input);
+      if (!Array.isArray(parsed)) {
+        throw new Error('JSON must be an array');
+      }
+
+      const validCards: NameCard[] = parsed.map((item, index) => {
+        if (typeof item.name !== 'string' || !item.name.trim()) {
+          throw new Error(`Element ${index + 1} is missing "name"`);
+        }
+        if (typeof item.icon !== 'string') {
+          throw new Error(`Element ${index + 1} is missing "icon"`);
+        }
+        return {
+          name: item.name,
+          icon: item.icon,
+        };
+      });
+
+      setCards(validCards);
+      setError('');
+      setCurrentPage(1);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to parse JSON');
+      setCards([]);
+    }
+  }, []);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const value = e.target.value;
+    setJsonInput(value);
+    parseJson(value);
+  };
+
+  const handlePrevPage = () => {
+    setCurrentPage((prev) => Math.max(1, prev - 1));
+  };
+
+  const handleNextPage = () => {
+    setCurrentPage((prev) => Math.min(totalPages, prev + 1));
+  };
+
+  const handlePrint = () => {
+    if (iframeRef.current?.contentWindow) {
+      iframeRef.current.contentWindow.print();
+    }
+  };
+
+  const currentPageCards = cards.slice(
+    (currentPage - 1) * CARDS_PER_PAGE,
+    currentPage * CARDS_PER_PAGE
+  );
+
+  return (
+    <div className="container">
+      <div className="input-panel">
+        <h1>simple-namecards</h1>
+        <label htmlFor="json-input">JSON Input</label>
+        <textarea
+          id="json-input"
+          value={jsonInput}
+          onChange={handleInputChange}
+          placeholder="Enter JSON array..."
+        />
+        {error && <div className="error-message">{error}</div>}
+        <button
+          type="button"
+          onClick={handlePrint}
+          disabled={cards.length === 0}
+        >
+          Print
+        </button>
+      </div>
+      <div className="preview-panel">
+        <div className="pagination">
+          <button
+            type="button"
+            onClick={handlePrevPage}
+            disabled={currentPage <= 1}
+          >
+            &lt;
+          </button>
+          <span>
+            {cards.length > 0 ? `${currentPage}/${totalPages}` : '0/0'}
+          </span>
+          <button
+            type="button"
+            onClick={handleNextPage}
+            disabled={currentPage >= totalPages}
+          >
+            &gt;
+          </button>
+        </div>
+        <Preview
+          ref={iframeRef}
+          cards={currentPageCards}
+          allCards={cards}
+          currentPage={currentPage}
+          totalPages={totalPages}
+        />
+      </div>
+    </div>
+  );
+}
+
+export default App;
