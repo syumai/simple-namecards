@@ -26,6 +26,40 @@ const encodeCards = (cards: NameCard[]): string => {
   return btoa(encodeURIComponent(lines.join('\n')));
 };
 
+if (import.meta.vitest) {
+  const { describe, it, expect } = import.meta.vitest;
+
+  describe('encodeCards', () => {
+    it('should compress https:// URLs with ^ prefix', () => {
+      const cards: NameCard[] = [
+        { name: 'Test', icon: 'https://example.com/test.png' },
+      ];
+      const encoded = encodeCards(cards);
+      const decoded = decodeURIComponent(atob(encoded));
+      expect(decoded).toContain('^example.com/test.png');
+      expect(decoded).not.toContain('https://');
+    });
+
+    it('should include social when present', () => {
+      const cards: NameCard[] = [
+        { name: 'Alice', icon: 'icon.png', social: '@alice' },
+      ];
+      const encoded = encodeCards(cards);
+      const decoded = decodeURIComponent(atob(encoded));
+      expect(decoded).toBe('Alice|icon.png|@alice');
+    });
+
+    it('should omit social when absent', () => {
+      const cards: NameCard[] = [
+        { name: 'Bob', icon: 'icon.png' },
+      ];
+      const encoded = encodeCards(cards);
+      const decoded = decodeURIComponent(atob(encoded));
+      expect(decoded).toBe('Bob|icon.png');
+    });
+  });
+}
+
 const decodeCards = (encoded: string): NameCard[] | null => {
   try {
     const text = decodeURIComponent(atob(encoded));
@@ -42,6 +76,49 @@ const decodeCards = (encoded: string): NameCard[] | null => {
     return null;
   }
 };
+
+if (import.meta.vitest) {
+  const { describe, it, expect } = import.meta.vitest;
+
+  describe('decodeCards', () => {
+    it('should decode cards with social', () => {
+      const cards: NameCard[] = [
+        { name: 'Alice', icon: 'https://example.com/alice.png', social: '@alice' },
+      ];
+      const encoded = encodeCards(cards);
+      expect(decodeCards(encoded)).toEqual(cards);
+    });
+
+    it('should decode cards without social', () => {
+      const cards: NameCard[] = [
+        { name: 'Bob', icon: 'https://example.com/bob.png' },
+      ];
+      const encoded = encodeCards(cards);
+      expect(decodeCards(encoded)).toEqual(cards);
+    });
+
+    it('should handle multiple cards', () => {
+      const cards: NameCard[] = [
+        { name: 'Alice', icon: 'https://example.com/alice.png', social: '@alice' },
+        { name: 'Bob', icon: 'icon-bob' },
+      ];
+      const encoded = encodeCards(cards);
+      expect(decodeCards(encoded)).toEqual(cards);
+    });
+
+    it('should return null for invalid encoded string', () => {
+      expect(decodeCards('invalid-base64!!')).toBeNull();
+    });
+
+    it('should handle Japanese characters in name', () => {
+      const cards: NameCard[] = [
+        { name: '太郎', icon: 'https://example.com/taro.png', social: '@taro' },
+      ];
+      const encoded = encodeCards(cards);
+      expect(decodeCards(encoded)).toEqual(cards);
+    });
+  });
+}
 
 function App() {
   const [jsonInput, setJsonInput] = useState(defaultJson);
