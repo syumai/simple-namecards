@@ -16,6 +16,33 @@ const defaultCards: NameCard[] = [
 
 const defaultJson = JSON.stringify(defaultCards, null, 2);
 
+const encodeCards = (cards: NameCard[]): string => {
+  const lines = cards.map(c => {
+    const icon = c.icon.startsWith('https://')
+      ? '^' + c.icon.slice(8)
+      : c.icon;
+    return c.social ? `${c.name}|${icon}|${c.social}` : `${c.name}|${icon}`;
+  });
+  return btoa(encodeURIComponent(lines.join('\n')));
+};
+
+const decodeCards = (encoded: string): NameCard[] | null => {
+  try {
+    const text = decodeURIComponent(atob(encoded));
+    return text.split('\n').filter(Boolean).map(line => {
+      const [name, iconRaw, social] = line.split('|');
+      const icon = iconRaw.startsWith('^')
+        ? 'https://' + iconRaw.slice(1)
+        : iconRaw;
+      const card: NameCard = { name, icon };
+      if (social) card.social = social;
+      return card;
+    });
+  } catch {
+    return null;
+  }
+};
+
 function App() {
   const [jsonInput, setJsonInput] = useState(defaultJson);
   const [cards, setCards] = useState<NameCard[]>(defaultCards);
@@ -86,7 +113,7 @@ function App() {
   };
 
   const handleShare = async () => {
-    const encoded = encodeURIComponent(jsonInput);
+    const encoded = encodeCards(cards);
     const url = `${window.location.origin}${window.location.pathname}?data=${encoded}`;
     await navigator.clipboard.writeText(url);
     alert('URL copied to clipboard!');
@@ -96,15 +123,15 @@ function App() {
     const params = new URLSearchParams(window.location.search);
     const data = params.get('data');
     if (data) {
-      try {
-        const json = decodeURIComponent(data);
+      const decoded = decodeCards(data);
+      if (decoded) {
+        const json = JSON.stringify(decoded, null, 2);
         setJsonInput(json);
-        parseJson(json);
-      } catch (e) {
-        // ignore invalid data
+        setCards(decoded);
+        setCurrentPage(1);
       }
     }
-  }, [parseJson]);
+  }, []);
 
   return (
     <div className="container">
