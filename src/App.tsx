@@ -23,7 +23,7 @@ const encodeCards = (cards: NameCard[]): string => {
       : c.icon;
     return c.social ? `${c.name}|${icon}|${c.social}` : `${c.name}|${icon}`;
   });
-  return new TextEncoder().encode(lines.join('\n')).toBase64();
+  return new TextEncoder().encode(lines.join('\n')).toBase64({ alphabet: 'base64url' });
 };
 
 if (import.meta.vitest) {
@@ -35,7 +35,7 @@ if (import.meta.vitest) {
         { name: 'Test', icon: 'https://example.com/test.png' },
       ];
       const encoded = encodeCards(cards);
-      const decoded = new TextDecoder().decode(Uint8Array.fromBase64(encoded));
+      const decoded = new TextDecoder().decode(Uint8Array.fromBase64(encoded, { alphabet: 'base64url' }));
       expect(decoded).toContain('^example.com/test.png');
       expect(decoded).not.toContain('https://');
     });
@@ -45,7 +45,7 @@ if (import.meta.vitest) {
         { name: 'Alice', icon: 'icon.png', social: '@alice' },
       ];
       const encoded = encodeCards(cards);
-      const decoded = new TextDecoder().decode(Uint8Array.fromBase64(encoded));
+      const decoded = new TextDecoder().decode(Uint8Array.fromBase64(encoded, { alphabet: 'base64url' }));
       expect(decoded).toBe('Alice|icon.png|@alice');
     });
 
@@ -54,7 +54,7 @@ if (import.meta.vitest) {
         { name: 'Bob', icon: 'icon.png' },
       ];
       const encoded = encodeCards(cards);
-      const decoded = new TextDecoder().decode(Uint8Array.fromBase64(encoded));
+      const decoded = new TextDecoder().decode(Uint8Array.fromBase64(encoded, { alphabet: 'base64url' }));
       expect(decoded).toBe('Bob|icon.png');
     });
   });
@@ -62,7 +62,7 @@ if (import.meta.vitest) {
 
 const decodeCards = (encoded: string): NameCard[] | null => {
   try {
-    const text = new TextDecoder().decode(Uint8Array.fromBase64(encoded));
+    const text = new TextDecoder().decode(Uint8Array.fromBase64(encoded, { alphabet: 'base64url' }));
     return text.split('\n').filter(Boolean).map(line => {
       const [name, iconRaw, social] = line.split('|');
       const icon = iconRaw.startsWith('^')
