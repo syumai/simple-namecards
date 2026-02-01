@@ -230,16 +230,15 @@ const Preview = forwardRef<HTMLIFrameElement, PreviewProps>(({ allCards, current
 
   useImperativeHandle(ref, () => {
     const iframe = iframeRef.current!;
-    return {
-      ...iframe,
-      get contentWindow() {
+    return Object.defineProperty(Object.create(iframe), "contentWindow", {
+      get() {
         const printHtml = generatePrintHtml(allCards);
         iframe.contentDocument?.open();
         iframe.contentDocument?.write(printHtml);
         iframe.contentDocument?.close();
         return iframe.contentWindow;
       },
-    } as HTMLIFrameElement;
+    }) as HTMLIFrameElement;
   });
 
   useEffect(() => {
