@@ -1,6 +1,6 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
-import { NameCard, CARDS_PER_PAGE } from './types';
-import Preview from './components/Preview';
+import { useState, useCallback, useRef, useEffect } from "react";
+import { NameCard, CARDS_PER_PAGE } from "./types";
+import Preview from "./components/Preview";
 
 const defaultCards: NameCard[] = [
   { name: "Felix", icon: "https://api.dicebear.com/7.x/thumbs/svg?seed=Felix", social: "@felix" },
@@ -11,67 +11,72 @@ const defaultCards: NameCard[] = [
   { name: "Simba", icon: "https://api.dicebear.com/7.x/thumbs/svg?seed=Simba", social: "@simba" },
   { name: "Bear", icon: "https://api.dicebear.com/7.x/thumbs/svg?seed=Bear", social: "@bear" },
   { name: "Kitty", icon: "https://api.dicebear.com/7.x/thumbs/svg?seed=Kitty", social: "@kitty" },
-  { name: "Jasmine", icon: "https://api.dicebear.com/7.x/thumbs/svg?seed=Jasmine", social: "@jasmine" },
+  {
+    name: "Jasmine",
+    icon: "https://api.dicebear.com/7.x/thumbs/svg?seed=Jasmine",
+    social: "@jasmine",
+  },
 ];
 
 const defaultJson = JSON.stringify(defaultCards, null, 2);
 
 const encodeCards = (cards: NameCard[]): string => {
-  const lines = cards.map(c => {
-    const icon = c.icon.startsWith('https://')
-      ? '^' + c.icon.slice(8)
-      : c.icon;
+  const lines = cards.map((c) => {
+    const icon = c.icon.startsWith("https://") ? "^" + c.icon.slice(8) : c.icon;
     return c.social ? `${c.name}|${icon}|${c.social}` : `${c.name}|${icon}`;
   });
-  return new TextEncoder().encode(lines.join('\n')).toBase64({ alphabet: 'base64url' });
+  return new TextEncoder().encode(lines.join("\n")).toBase64({ alphabet: "base64url" });
 };
 
 if (import.meta.vitest) {
   const { describe, it, expect } = import.meta.vitest;
 
-  describe('encodeCards', () => {
-    it('should compress https:// URLs with ^ prefix', () => {
-      const cards: NameCard[] = [
-        { name: 'Test', icon: 'https://example.com/test.png' },
-      ];
+  describe("encodeCards", () => {
+    it("should compress https:// URLs with ^ prefix", () => {
+      const cards: NameCard[] = [{ name: "Test", icon: "https://example.com/test.png" }];
       const encoded = encodeCards(cards);
-      const decoded = new TextDecoder().decode(Uint8Array.fromBase64(encoded, { alphabet: 'base64url' }));
-      expect(decoded).toContain('^example.com/test.png');
-      expect(decoded).not.toContain('https://');
+      const decoded = new TextDecoder().decode(
+        Uint8Array.fromBase64(encoded, { alphabet: "base64url" }),
+      );
+      expect(decoded).toContain("^example.com/test.png");
+      expect(decoded).not.toContain("https://");
     });
 
-    it('should include social when present', () => {
-      const cards: NameCard[] = [
-        { name: 'Alice', icon: 'icon.png', social: '@alice' },
-      ];
+    it("should include social when present", () => {
+      const cards: NameCard[] = [{ name: "Alice", icon: "icon.png", social: "@alice" }];
       const encoded = encodeCards(cards);
-      const decoded = new TextDecoder().decode(Uint8Array.fromBase64(encoded, { alphabet: 'base64url' }));
-      expect(decoded).toBe('Alice|icon.png|@alice');
+      const decoded = new TextDecoder().decode(
+        Uint8Array.fromBase64(encoded, { alphabet: "base64url" }),
+      );
+      expect(decoded).toBe("Alice|icon.png|@alice");
     });
 
-    it('should omit social when absent', () => {
-      const cards: NameCard[] = [
-        { name: 'Bob', icon: 'icon.png' },
-      ];
+    it("should omit social when absent", () => {
+      const cards: NameCard[] = [{ name: "Bob", icon: "icon.png" }];
       const encoded = encodeCards(cards);
-      const decoded = new TextDecoder().decode(Uint8Array.fromBase64(encoded, { alphabet: 'base64url' }));
-      expect(decoded).toBe('Bob|icon.png');
+      const decoded = new TextDecoder().decode(
+        Uint8Array.fromBase64(encoded, { alphabet: "base64url" }),
+      );
+      expect(decoded).toBe("Bob|icon.png");
     });
   });
 }
 
 const decodeCards = (encoded: string): NameCard[] | null => {
   try {
-    const text = new TextDecoder().decode(Uint8Array.fromBase64(encoded, { alphabet: 'base64url' }));
-    return text.split('\n').filter(Boolean).map(line => {
-      const [name, iconRaw, social] = line.split('|');
-      const icon = iconRaw.startsWith('^')
-        ? 'https://' + iconRaw.slice(1)
-        : iconRaw;
-      const card: NameCard = { name, icon };
-      if (social) card.social = social;
-      return card;
-    });
+    const text = new TextDecoder().decode(
+      Uint8Array.fromBase64(encoded, { alphabet: "base64url" }),
+    );
+    return text
+      .split("\n")
+      .filter(Boolean)
+      .map((line) => {
+        const [name, iconRaw, social] = line.split("|");
+        const icon = iconRaw.startsWith("^") ? "https://" + iconRaw.slice(1) : iconRaw;
+        const card: NameCard = { name, icon };
+        if (social) card.social = social;
+        return card;
+      });
   } catch {
     return null;
   }
@@ -80,39 +85,37 @@ const decodeCards = (encoded: string): NameCard[] | null => {
 if (import.meta.vitest) {
   const { describe, it, expect } = import.meta.vitest;
 
-  describe('decodeCards', () => {
-    it('should decode cards with social', () => {
+  describe("decodeCards", () => {
+    it("should decode cards with social", () => {
       const cards: NameCard[] = [
-        { name: 'Alice', icon: 'https://example.com/alice.png', social: '@alice' },
+        { name: "Alice", icon: "https://example.com/alice.png", social: "@alice" },
       ];
       const encoded = encodeCards(cards);
       expect(decodeCards(encoded)).toEqual(cards);
     });
 
-    it('should decode cards without social', () => {
+    it("should decode cards without social", () => {
+      const cards: NameCard[] = [{ name: "Bob", icon: "https://example.com/bob.png" }];
+      const encoded = encodeCards(cards);
+      expect(decodeCards(encoded)).toEqual(cards);
+    });
+
+    it("should handle multiple cards", () => {
       const cards: NameCard[] = [
-        { name: 'Bob', icon: 'https://example.com/bob.png' },
+        { name: "Alice", icon: "https://example.com/alice.png", social: "@alice" },
+        { name: "Bob", icon: "icon-bob" },
       ];
       const encoded = encodeCards(cards);
       expect(decodeCards(encoded)).toEqual(cards);
     });
 
-    it('should handle multiple cards', () => {
-      const cards: NameCard[] = [
-        { name: 'Alice', icon: 'https://example.com/alice.png', social: '@alice' },
-        { name: 'Bob', icon: 'icon-bob' },
-      ];
-      const encoded = encodeCards(cards);
-      expect(decodeCards(encoded)).toEqual(cards);
+    it("should return null for invalid encoded string", () => {
+      expect(decodeCards("invalid-base64!!")).toBeNull();
     });
 
-    it('should return null for invalid encoded string', () => {
-      expect(decodeCards('invalid-base64!!')).toBeNull();
-    });
-
-    it('should handle Japanese characters in name', () => {
+    it("should handle Japanese characters in name", () => {
       const cards: NameCard[] = [
-        { name: '太郎', icon: 'https://example.com/taro.png', social: '@taro' },
+        { name: "太郎", icon: "https://example.com/taro.png", social: "@taro" },
       ];
       const encoded = encodeCards(cards);
       expect(decodeCards(encoded)).toEqual(cards);
@@ -123,7 +126,7 @@ if (import.meta.vitest) {
 function App() {
   const [jsonInput, setJsonInput] = useState(defaultJson);
   const [cards, setCards] = useState<NameCard[]>(defaultCards);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
@@ -132,7 +135,7 @@ function App() {
   const parseJson = useCallback((input: string) => {
     if (!input.trim()) {
       setCards([]);
-      setError('');
+      setError("");
       setCurrentPage(1);
       return;
     }
@@ -140,31 +143,31 @@ function App() {
     try {
       const parsed = JSON.parse(input);
       if (!Array.isArray(parsed)) {
-        throw new Error('JSON must be an array');
+        throw new Error("JSON must be an array");
       }
 
       const validCards: NameCard[] = parsed.map((item, index) => {
-        if (typeof item.name !== 'string' || !item.name.trim()) {
+        if (typeof item.name !== "string" || !item.name.trim()) {
           throw new Error(`Element ${index + 1} is missing "name"`);
         }
-        if (typeof item.icon !== 'string') {
+        if (typeof item.icon !== "string") {
           throw new Error(`Element ${index + 1} is missing "icon"`);
         }
         const card: NameCard = {
           name: item.name,
           icon: item.icon,
         };
-        if (typeof item.social === 'string' && item.social.trim()) {
+        if (typeof item.social === "string" && item.social.trim()) {
           card.social = item.social;
         }
         return card;
       });
 
       setCards(validCards);
-      setError('');
+      setError("");
       setCurrentPage(1);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to parse JSON');
+      setError(e instanceof Error ? e.message : "Failed to parse JSON");
       setCards([]);
     }
   }, []);
@@ -193,12 +196,12 @@ function App() {
     const encoded = encodeCards(cards);
     const url = `${window.location.origin}${window.location.pathname}?data=${encoded}`;
     await navigator.clipboard.writeText(url);
-    alert('URL copied to clipboard!');
+    alert("URL copied to clipboard!");
   };
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const data = params.get('data');
+    const data = params.get("data");
     if (data) {
       const decoded = decodeCards(data);
       if (decoded) {
@@ -223,11 +226,7 @@ function App() {
         />
         {error && <div className="error-message">{error}</div>}
         <div className="button-group">
-          <button
-            type="button"
-            onClick={handlePrint}
-            disabled={cards.length === 0}
-          >
+          <button type="button" onClick={handlePrint} disabled={cards.length === 0}>
             Print
           </button>
           <button
@@ -242,21 +241,11 @@ function App() {
       </div>
       <div className="preview-panel">
         <div className="pagination">
-          <button
-            type="button"
-            onClick={handlePrevPage}
-            disabled={currentPage <= 1}
-          >
+          <button type="button" onClick={handlePrevPage} disabled={currentPage <= 1}>
             &lt;
           </button>
-          <span>
-            {cards.length > 0 ? `${currentPage}/${totalPages}` : '0/0'}
-          </span>
-          <button
-            type="button"
-            onClick={handleNextPage}
-            disabled={currentPage >= totalPages}
-          >
+          <span>{cards.length > 0 ? `${currentPage}/${totalPages}` : "0/0"}</span>
+          <button type="button" onClick={handleNextPage} disabled={currentPage >= totalPages}>
             &gt;
           </button>
         </div>

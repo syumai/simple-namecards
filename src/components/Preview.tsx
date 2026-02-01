@@ -1,5 +1,5 @@
-import { forwardRef, useEffect, useRef, useImperativeHandle } from 'react';
-import { NameCard, CARDS_PER_PAGE } from '../types';
+import { forwardRef, useEffect, useRef, useImperativeHandle } from "react";
+import { NameCard, CARDS_PER_PAGE } from "../types";
 
 interface PreviewProps {
   allCards: NameCard[];
@@ -131,7 +131,7 @@ const generateCardHtml = (card: NameCard) => `
   <div class="card">
     <img class="card-icon" src="${card.icon}" alt="${card.name}" onerror="this.style.display='none'" />
     <div class="card-name">${card.name}</div>
-    ${card.social ? `<div class="card-social">${card.social}</div>` : ''}
+    ${card.social ? `<div class="card-social">${card.social}</div>` : ""}
   </div>
 `;
 
@@ -153,16 +153,19 @@ const generatePageHtml = (cards: NameCard[], startIndex: number, pageNumber: num
     }
   }
 
-  html += '</div>';
+  html += "</div>";
   return html;
 };
 
 const generatePreviewHtml = (allCards: NameCard[], currentPage: number) => {
   const styles = generateStyles();
-  let pagesHtml = '';
+  let pagesHtml = "";
 
   if (allCards.length === 0) {
-    pagesHtml = '<div class="page" data-page="1">' + Array(8).fill(generateEmptyCardHtml()).join('') + '</div>';
+    pagesHtml =
+      '<div class="page" data-page="1">' +
+      Array(8).fill(generateEmptyCardHtml()).join("") +
+      "</div>";
   } else {
     const totalPages = Math.ceil(allCards.length / CARDS_PER_PAGE);
     for (let i = 0; i < totalPages; i++) {
@@ -194,10 +197,13 @@ const generatePreviewHtml = (allCards: NameCard[], currentPage: number) => {
 
 const generatePrintHtml = (allCards: NameCard[]) => {
   const styles = generateStyles();
-  let pagesHtml = '';
+  let pagesHtml = "";
 
   if (allCards.length === 0) {
-    pagesHtml = '<div class="page" data-page="1">' + Array(8).fill(generateEmptyCardHtml()).join('') + '</div>';
+    pagesHtml =
+      '<div class="page" data-page="1">' +
+      Array(8).fill(generateEmptyCardHtml()).join("") +
+      "</div>";
   } else {
     const totalPages = Math.ceil(allCards.length / CARDS_PER_PAGE);
     for (let i = 0; i < totalPages; i++) {
@@ -219,44 +225,36 @@ const generatePrintHtml = (allCards: NameCard[]) => {
   `;
 };
 
-const Preview = forwardRef<HTMLIFrameElement, PreviewProps>(
-  ({ allCards, currentPage }, ref) => {
-    const iframeRef = useRef<HTMLIFrameElement>(null);
+const Preview = forwardRef<HTMLIFrameElement, PreviewProps>(({ allCards, currentPage }, ref) => {
+  const iframeRef = useRef<HTMLIFrameElement>(null);
 
-    useImperativeHandle(ref, () => {
-      const iframe = iframeRef.current!;
-      return {
-        ...iframe,
-        get contentWindow() {
-          const printHtml = generatePrintHtml(allCards);
-          iframe.contentDocument?.open();
-          iframe.contentDocument?.write(printHtml);
-          iframe.contentDocument?.close();
-          return iframe.contentWindow;
-        },
-      } as HTMLIFrameElement;
-    });
-
-    useEffect(() => {
-      const iframe = iframeRef.current;
-      if (iframe) {
-        const html = generatePreviewHtml(allCards, currentPage);
+  useImperativeHandle(ref, () => {
+    const iframe = iframeRef.current!;
+    return {
+      ...iframe,
+      get contentWindow() {
+        const printHtml = generatePrintHtml(allCards);
         iframe.contentDocument?.open();
-        iframe.contentDocument?.write(html);
+        iframe.contentDocument?.write(printHtml);
         iframe.contentDocument?.close();
-      }
-    }, [allCards, currentPage]);
+        return iframe.contentWindow;
+      },
+    } as HTMLIFrameElement;
+  });
 
-    return (
-      <iframe
-        ref={iframeRef}
-        className="preview-iframe"
-        title="Preview"
-      />
-    );
-  }
-);
+  useEffect(() => {
+    const iframe = iframeRef.current;
+    if (iframe) {
+      const html = generatePreviewHtml(allCards, currentPage);
+      iframe.contentDocument?.open();
+      iframe.contentDocument?.write(html);
+      iframe.contentDocument?.close();
+    }
+  }, [allCards, currentPage]);
 
-Preview.displayName = 'Preview';
+  return <iframe ref={iframeRef} className="preview-iframe" title="Preview" />;
+});
+
+Preview.displayName = "Preview";
 
 export default Preview;
